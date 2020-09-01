@@ -1,0 +1,55 @@
+---
+- hosts: webservers
+  remote_user: matt
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: ensure apache is installed
+      yum:
+        name: httpd
+        state: installed
+    - name: check httpd started
+      service:
+        name: httpd
+        state: started
+
+- hosts: dbservers
+  remote_user: matt
+  become: yes
+  become_method: sudo
+  vars:
+    dbname: cinema
+    dbuser: cinema
+    dbclientip: 192.168.1.64/27
+    pgversion: 12
+  tasks:
+    - name: copy script database creation
+      copy:
+        src: /home/moi/Ansible/Mat/FirstExample/sql/files/createdb.sql
+        dest: /tmp
+    - name: create database/user
+      command: psql -f createdb.sql
+      args:
+        chdir: /tmp
+      become_user: postgres
+    - name: conf globale postgresql 
+      copy:
+        src: /home/moi/Ansible/Mat/FirstExample/sql/files/postgresql.conf
+        dest: /var/lib/pgsql/{{ pgversion }}/data/
+        owner: postgres
+        group: postgres
+        mode: 0600
+      notify:
+        - restart postgresql
+    - name: conf hba postgresql
+      template:
+        src: /home/moi/Ansible/Mat/FirstExample/sql/templates/pg_hba.j2
+        dest: /var/lib/pgsql/{{ pgversion }}/data/pg_hba.conf
+        owner: postgres
+        group: postgres
+        mode: 0600
+  handlers:
+    - name: restart postgresql
+      service:
+        name: postgresql-{{ pgversion }}
+        state: restarted

@@ -1,0 +1,26 @@
+---
+- name: copy script database creation
+  copy:
+    src: createdb.sql
+    dest: /tmp
+- name: create database/user
+  command: psql -f createdb.sql
+  args:
+    chdir: /tmp
+  become_user: postgres
+- name: conf globale postgresql 
+  copy:
+    src: postgresql.conf
+    dest: /var/lib/pgsql/{{ pgversion }}/data/
+    owner: postgres
+    group: postgres
+    mode: 0600
+  notify:
+    - restart postgresql
+- name: conf hba postgresql
+  template:
+    src: pg_hba.j2
+    dest: /var/lib/pgsql/{{ pgversion }}/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: 0600

@@ -1,0 +1,13 @@
+---
+- hosts: webservers
+  remote_user: matt
+  become: yes
+  become_method: sudo
+  roles:
+    - install-webserver
+- hosts: dbservers
+  remote_user: matt
+  become: yes
+  become_method: sudo
+  roles:
+    - install-database

@@ -1,0 +1,4 @@
+---
+dbname: cinema
+dbuser: cinema
+pgversion: 12
